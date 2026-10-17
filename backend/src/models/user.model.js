@@ -15,3 +15,11 @@ export async function getUserById(id) {
   );
   return rows[0] ?? null;
 }
+
+export async function insertUser(name, phone, passwordHash, role) {
+  const { rows } = await query(
+    "INSERT INTO users (name, phone, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, name, phone, role",
+    [name, phone, passwordHash, role],
+  );
+  return rows[0];
+}
