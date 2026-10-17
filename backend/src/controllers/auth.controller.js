@@ -26,3 +26,20 @@ export async function getUserLogin(req, res, next) {
     next(error);
   }
 }
+
+export async function register(req, res, next) {
+  try {
+    const { name, phone, password } = req.body;
+    if (!name || !phone || !password)
+      return res.status(400).json({ message: "All fields are required" });
+    if (password.length < 8)
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 8 characters" });
+
+    const user = await authService.register(name, phone, password);
+    res.status(201).json(user);
+  } catch (error) {
+    next(error);
+  }
+}
