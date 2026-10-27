@@ -1,7 +1,7 @@
 import { query } from "../db/index.js";
 
 const toService = (r) => ({
-  id: r.id,
+  id: Number(r.id),
   name: r.name,
   description: r.description,
   price: Number(r.price),
