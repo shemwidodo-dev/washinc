@@ -98,3 +98,27 @@ export async function createOrder(userId, pickupAddress, pickupNotes, items) {
     };
   });
 }
+
+export async function getTracking(trackingCode) {
+  const order = await orderModel.findByTrackingCode(trackingCode);
+
+  if (!order) throw new HttpError(404, "Tracking code not found");
+
+  const [items, history] = await Promise.all([
+    orderModel.findItemsByOrderId(order.id),
+    orderModel.findHistoryByOrderId(order.id),
+  ]);
+
+  return {
+    trackingCode: order.trackingCode,
+    status: order.status,
+    createdAt: order.createdAt,
+    totalPrice: order.totalPrice,
+    items: items,
+    history: history.map((h) => ({
+      status: h.status,
+      note: h.note,
+      changedAt: h.changedAt,
+    })),
+  };
+}
