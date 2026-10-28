@@ -17,7 +17,6 @@ export async function createOrder(userId, pickupAddress, pickupNotes, items) {
 
   const services = await serviceModel.getActiveServicesByIds([...ids]);
   const byId = new Map(services.map((s) => [s.id, s]));
-  console.log([...byId.keys()], typeof [...byId.keys()][0]);
   let totalPrice = 0;
   const validatedItems = [];
 
