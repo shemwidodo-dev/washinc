@@ -1,3 +1,5 @@
+import { query } from "../db/index.js";
+
 export async function insertOrder(
   client,
   userId,
@@ -33,4 +35,50 @@ export async function insertHistory(client, orderId, status, note, changedBy) {
     "INSERT INTO order_status_history (order_id, status, note, changed_by) VALUES ($1, $2, $3, $4)",
     [orderId, status, note, changedBy],
   );
+}
+
+export async function findByTrackingCode(trackingCode) {
+  const { rows } = await query(
+    "SELECT id, tracking_code, status, total_price, created_at FROM orders WHERE tracking_code = $1",
+    [trackingCode],
+  );
+
+  if (!rows[0]) return null;
+
+  return rows.map((r) => ({
+    id: Number(r.id),
+    trackingCode: r.tracking_code,
+    status: r.status,
+    totalPrice: Number(r.total_price),
+    createdAt: r.created_at,
+  }))[0];
+}
+
+export async function findItemsByOrderId(orderId) {
+  const { rows } = await query(
+    "SELECT s1.name as service, oi.item_desc, oi.price, s2.name as addon_service, oi.addon_price FROM order_items oi JOIN services s1 ON s1.id = oi.service_id LEFT JOIN services s2 ON s2.id = oi.addon_service_id WHERE oi.order_id = $1 ORDER BY oi.id",
+    [orderId],
+  );
+
+  return rows.map((r) => ({
+    service: r.service,
+    itemDesc: r.item_desc,
+    price: Number(r.price),
+    addonService: r.addon_service,
+    addonPrice: r.addon_price === null ? null : Number(r.addon_price),
+  }));
+}
+
+export async function findHistoryByOrderId(orderId) {
+  const { rows } = await query(
+    "SELECT id, status, note, changed_at FROM order_status_history WHERE order_id = $1 ORDER BY changed_at ASC, id ASC",
+    [orderId],
+  );
+
+  return rows.map((r) => ({
+    id: Number(r.id),
+    status: r.status,
+    note: r.note,
+    changedAt: r.changed_at,
+  }));
 }
