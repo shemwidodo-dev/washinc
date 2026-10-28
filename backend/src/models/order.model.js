@@ -82,3 +82,22 @@ export async function findHistoryByOrderId(orderId) {
     changedAt: r.changed_at,
   }));
 }
+
+export async function findByIdForUpdate(client, orderId) {
+  const { rows } = await client.query(
+    "SELECT id, status FROM orders WHERE id=$1 FOR UPDATE",
+    [orderId],
+  );
+
+  const r = rows[0];
+  if (!r) return null;
+
+  return { id: Number(r.id), status: r.status };
+}
+
+export async function updateStatus(client, orderId, status) {
+  await client.query("UPDATE orders SET status = $1 WHERE id = $2", [
+    status,
+    orderId,
+  ]);
+}
