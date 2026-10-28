@@ -8,6 +8,14 @@ const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const makeTrackingSuffix = () =>
   Array.from({ length: 6 }, () => CHARS[randomInt(CHARS.length)]).join("");
 
+const TRANSITIONS = {
+  pending: ["picked_up", "cancelled"],
+  picked_up: ["washing"],
+  washing: ["drying"],
+  drying: ["ready"],
+  ready: ["delivered"],
+};
+
 export async function createOrder(userId, pickupAddress, pickupNotes, items) {
   const ids = new Set();
   for (const item of items) {
@@ -121,4 +129,31 @@ export async function getTracking(trackingCode) {
       changedAt: h.changedAt,
     })),
   };
+}
+
+export async function updateOrderStatus(orderId, newStatus, note, changedBy) {
+  return withTransaction(async (client) => {
+    const order = await orderModel.findByIdForUpdate(client, orderId);
+    if (!order) throw new HttpError(404, "Order not found");
+
+    const allowed = TRANSITIONS[order.status] ?? [];
+    if (!allowed.includes(newStatus))
+      throw new HttpError(
+        409,
+        `Cannot change status from ${order.status} to ${newStatus}`,
+      );
+    await orderModel.updateStatus(client, orderId, newStatus);
+    await orderModel.insertHistory(
+      client,
+      orderId,
+      newStatus,
+      note?.trim() || null,
+      changedBy,
+    );
+
+    return {
+      id: orderId,
+      status: newStatus,
+    };
+  });
 }
