@@ -74,3 +74,18 @@ export async function createOrder(req, res, next) {
     next(error);
   }
 }
+
+export async function getTracking(req, res, next) {
+  try {
+    const trackingCode = req.params.trackingCode.trim().toUpperCase();
+    const regex = /^WSH-\d{8}-[A-Z0-9]{6}$/;
+    if (!regex.test(trackingCode))
+      return res.status(400).json({ message: "Invalid tracking code format" });
+
+    const result = await orderService.getTracking(trackingCode);
+
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
