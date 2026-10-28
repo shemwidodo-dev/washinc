@@ -3,6 +3,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth.routes.js";
 import reportRoutes from "./routes/report.routes.js";
 import serviceRoutes from "./routes/service.routes.js";
+import orderRoutes from "./routes/order.routes.js";
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.get("/health", (req, res) => res.json({ ok: true }));
 app.use("/auth", authRoutes);
 app.use("/reports", reportRoutes);
 app.use("/services", serviceRoutes);
+app.use("/orders", orderRoutes);
 
 app.use((err, req, res, next) => {
   if (err.status) return res.status(err.status).json({ message: err.message });
