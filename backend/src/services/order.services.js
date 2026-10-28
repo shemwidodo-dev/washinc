@@ -3,18 +3,11 @@ import { withTransaction } from "../db/index.js";
 import { HttpError } from "../utils/HttpError.js";
 import * as serviceModel from "../models/service.model.js";
 import * as orderModel from "../models/order.model.js";
+import { TRANSITIONS } from "../constants/orderStatus.js";
 
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const makeTrackingSuffix = () =>
   Array.from({ length: 6 }, () => CHARS[randomInt(CHARS.length)]).join("");
-
-const TRANSITIONS = {
-  pending: ["picked_up", "cancelled"],
-  picked_up: ["washing"],
-  washing: ["drying"],
-  drying: ["ready"],
-  ready: ["delivered"],
-};
 
 export async function createOrder(userId, pickupAddress, pickupNotes, items) {
   const ids = new Set();
