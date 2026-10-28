@@ -1,4 +1,5 @@
 import * as orderService from "../services/order.services.js";
+import { ORDER_STATUSES } from "../constants/orderStatus.js";
 
 function validateCreateOrder(body) {
   const { pickupAddress, pickupNotes, items } = body;
@@ -52,8 +53,8 @@ function validateCreateOrder(body) {
 }
 
 export async function createOrder(req, res, next) {
-  const body = req.body ?? {};
   try {
+    const body = req.body ?? {};
     const userId = req.user.id;
     const { pickupAddress, pickupNotes, items } = body;
 
@@ -84,6 +85,42 @@ export async function getTracking(req, res, next) {
 
     const result = await orderService.getTracking(trackingCode);
 
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateOrderStatus(req, res, next) {
+  try {
+    const body = req.body ?? {};
+    const orderId = Number(req.params.id);
+
+    if (!Number.isInteger(orderId) || orderId <= 0)
+      return res.status(400).json({ message: "Invalid type of ID" });
+
+    const { newStatus, note } = body;
+
+    if (!ORDER_STATUSES.includes(newStatus)) {
+      return res.status(400).json({
+        message: `newStatus must be one of: ${ORDER_STATUSES.join(", ")}`,
+      });
+    }
+
+    if (note != null && (typeof note !== "string" || note.length > 300)) {
+      return res.status(400).json({
+        message: "note must be a string up to 300 characters",
+      });
+    }
+
+    const changedBy = req.user.id;
+
+    const result = await orderService.updateOrderStatus(
+      orderId,
+      newStatus,
+      note,
+      changedBy,
+    );
     res.status(200).json(result);
   } catch (error) {
     next(error);
